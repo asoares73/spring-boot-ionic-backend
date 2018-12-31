@@ -8,12 +8,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.asoares.cursomc.domain.Cliente;
+import com.asoares.cursomc.domain.Endereco;
 import com.asoares.cursomc.domain.ItemPedido;
 import com.asoares.cursomc.domain.PagamentoComBoleto;
 import com.asoares.cursomc.domain.Pedido;
 import com.asoares.cursomc.domain.enums.EstadoPagamento;
+import com.asoares.cursomc.repositories.EnderecoRepository;
 import com.asoares.cursomc.repositories.ItemPedidoRepository;
 import com.asoares.cursomc.repositories.PagamentoRepository;
 import com.asoares.cursomc.repositories.PedidoRepository;
@@ -44,6 +47,9 @@ public class PedidoService {
 	
 	@Autowired
 	private EmailService emailService;
+
+	@Autowired
+	private EnderecoRepository enderecoRepository;
 	
 	public Pedido find(Integer id) {
 		Optional<Pedido> obj = repo.findById(id);
@@ -51,6 +57,7 @@ public class PedidoService {
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Pedido.class.getName()));
 	}
 	
+	@Transactional
 	public Pedido insert(Pedido obj) {
 		obj.setId(null);
 		obj.setInstante(new Date());
@@ -61,6 +68,7 @@ public class PedidoService {
 			PagamentoComBoleto pagto = (PagamentoComBoleto) obj.getPagamento();
 			boletoService.preencherPagamentoComBoleto(pagto, obj.getInstante());
 		}
+		
 		obj = repo.save(obj);
 		pagamentoRepository.save(obj.getPagamento());
 		for (ItemPedido ip : obj.getItens()) {
